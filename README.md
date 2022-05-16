@@ -1,1 +1,5 @@
 # xpslmao
+
+Dependencies:
+
+- lmfit
