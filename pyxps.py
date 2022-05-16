@@ -15,6 +15,7 @@ from lmfit.models import PseudoVoigtModel
 # TO-DO
 # Constrain peak spacings for fits to doublets
 # Multiple regions for Shirley background OR integrate Shirley into lmfit
+# Add FWHM and area calculations to xpslmao (or add a function to do post-processing after fit results have been stored?)
 
 def xpslmao(path, xlim=False, ylim=False, xticks=False, yticks=False, c1s=False, bg=False, plot=True, plotFits=True, dim=(3.25,3.25), color='k', savefig=False, fit=False, fitBEGuess=False):
     xdim = dim[0]
