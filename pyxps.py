@@ -22,7 +22,7 @@ def xpslmao(path, xlim=False, ylim=False, xticks=False, yticks=False, c1s=False,
     ydim = dim[1]
     
     # regex \t+ skips over tabs of length 1 or longer
-    data = pd.read_csv(path, delimiter=r"\t+", skiprows = 2)
+    data = pd.read_csv(path, delimiter=r"\t+", skiprows = 2, engine="python")
     # sometimes, CSV contains repeats of headers in the middle of data
     # in this case, all entries are imported as strings instead of floats
     # pd.to_numeric with errors="coerce" converts all entries to floats
@@ -169,6 +169,7 @@ def stackSpectra(pathList, colorList, xlim=False, ylim=False, xlabel=True, ylabe
     dataList = list()
     maxBEList = list()
     fig, ax = plt.subplots()
+    dy = 0
     for k in range(0,len(pathList)):
         path = pathList[k]
         color = colorList[k]
@@ -187,7 +188,8 @@ def stackSpectra(pathList, colorList, xlim=False, ylim=False, xlabel=True, ylabe
             data["CPS"] = data["CPS"]/normalize[k]
             
         if type(yshift) == list or type(yshift) == tuple:
-            data["CPS"] = data["CPS"] + sum(yshift[:k])
+            dy += yshift[k]
+            data["CPS"] = data["CPS"] + dy
         else:
             data["CPS"] = data["CPS"] + k*yshift
         if c1sList != False: # shift data according to position of C 1s peak, referenced from Perkin-Elmer Handbook of XPS
