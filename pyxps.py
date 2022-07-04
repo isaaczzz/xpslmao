@@ -2,22 +2,25 @@
 """
 Isaac Zakaria
 20 February 2022
-
-Rev: 22 March 2022
 """
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib import rc
 import seaborn as sns
 from lmfit.models import PseudoVoigtModel
+
+rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
+rc('text', usetex=False)
 
 # TO-DO
 # Constrain peak spacings for fits to doublets
 # Multiple regions for Shirley background OR integrate Shirley into lmfit
 # Add FWHM and area calculations to xpslmao (or add a function to do post-processing after fit results have been stored?)
+# Fix fitBEGuess specification (throws TypeError)
 
-def xpslmao(path, xlim=False, ylim=False, xticks=False, yticks=False, c1s=False, bg=False, plot=True, plotFits=True, dim=(3.25,3.25), color='k', savefig=False, fit=False, fitBEGuess=False):
+def xpslmao(path, xlim=False, ylim=False, xticks=False, yticks=False, c1s=False, bg=False, plot=True, plotFits=True, plotEnvelope=False, dim=(3.25,3.25), color='k', savefig=False, fit=False, fitBEGuess=False):
     xdim = dim[0]
     ydim = dim[1]
     
@@ -36,7 +39,15 @@ def xpslmao(path, xlim=False, ylim=False, xticks=False, yticks=False, c1s=False,
     
     # data = data.drop(columns = dropCols)
     
-    colors = [[98/255,146/255,190/255],[194/255,104/255,47/255],[133/255,127/255,188/255]]
+    colors = [[98/255,146/255,190/255], # mid-blue
+              [194/255,104/255,47/255], # burnt orange
+              [133/255,127/255,188/255], # sour purple
+              [247/255,168/255,170/255]] # strawberry pink
+    # envelopeColor = [166/255,91/255,164/255] # grape purple
+    envelopeColor = "#000000"
+    
+    lineWidth = 2
+    envelopeLineWidth = 1.25
     
     # cut off K.E. through Envelope (counts) columns
     cutoff = data.columns.get_loc("B.E.")
@@ -100,8 +111,8 @@ def xpslmao(path, xlim=False, ylim=False, xticks=False, yticks=False, c1s=False,
             params["p"+str(k)+"fraction"].vary = False
             
             if fitBEGuess:
+                print(fitBEGuess[k-1])
                 params.add(name="p"+str(k)+"center", value=fitBEGuess[k-1], min=xlim[1], max=xlim[0])
-            
                 params.add(name="p"+str(k)+"amplitude", value=(max(y)-min(autoBG))*1.5, min=0)
                 params.add(name="p"+str(k)+"sigma", value=1.5, min=0, max=5)
             
@@ -117,24 +128,28 @@ def xpslmao(path, xlim=False, ylim=False, xticks=False, yticks=False, c1s=False,
         if bg == False:
             autoBG = 0
         elif bg == "Included":
-            sns.lineplot(data=data, x="B.E.", y="Background CPS", ax=ax, style=True, dashes=[(5,2)], legend=False, color='tab:gray')
+            sns.lineplot(data=data, x="B.E.", y="Background CPS", ax=ax, style=True, dashes=[(5,2)], legend=False, color='tab:gray', linewidth=envelopeLineWidth)
         else:
-            ax.plot(x, autoBG, 'k--', color='tab:gray')
+            ax.plot(x, autoBG, 'k--', dashes=(5,2), color='tab:gray', linewidth=envelopeLineWidth)
         if plotFits:
             k = 0
             fitCols = [col for col in data.columns if "None" in col and col != "None"]
             for col in fitCols:   
-                sns.lineplot(data=data, x="B.E.", y=col, ax=ax, style=True, legend=False, color=colors[k])
+                sns.lineplot(data=data, x="B.E.", y=col, ax=ax, style=True, legend=False, color=colors[k], linewidth=lineWidth)
                 k += 1
-        sns.lineplot(data=data, x="B.E.", y="CPS", ax=ax, style=True, legend=False, color=color)
+        if not plotEnvelope:
+            sns.lineplot(data=data, x="B.E.", y="CPS", ax=ax, style=True, legend=False, color=color, linewidth=envelopeLineWidth)
         if fit:
             # plt.plot(x, result.best_fit+autoBG, color=colors[0])
             comps = result.eval_components()
             # print(comps)
             for k in range(1,fit+1):
-                plt.plot(x, comps["p"+str(k)]+autoBG, color=colors[k-1])
+                plt.plot(x, comps["p"+str(k)]+autoBG, color=colors[k-1], linewidth=lineWidth)
+            if plotEnvelope:
+                plt.plot(x, result.best_fit+autoBG, dashes=(3,2), color=envelopeColor, linewidth=envelopeLineWidth)
+                sns.scatterplot(data=data, x="B.E.", y="CPS", ax=ax, style=True, legend=False, color=color, alpha=0.4, size=0.25, zorder=100)
         ax.set_xlabel("Binding Energy (eV)")
-        ax.set_ylabel("Intensity (CPS)")
+        ax.set_ylabel("${\it I}$ (cps)")
         ax.set_xlim(xlim)
         ax.set_ylim(ylim)
         if xlim == False and ylim == False:
@@ -184,7 +199,7 @@ def stackSpectra(pathList, colorList, xlim=False, ylim=False, xlabel=True, ylabe
             data["CPS"] = data["CPS"]
         elif type(normalize) is float:
             data["CPS"] = data["CPS"]/normalize
-        elif type(normalize) is list:
+        elif type(normalize) is list or type(normalize) is tuple:
             data["CPS"] = data["CPS"]/normalize[k]
             
         if type(yshift) == list or type(yshift) == tuple:
@@ -221,7 +236,7 @@ def stackSpectra(pathList, colorList, xlim=False, ylim=False, xlabel=True, ylabe
         else:
             ax.set_xlabel("")
         if ylabel:
-            ax.set_ylabel("Intensity (CPS)", fontsize=fontsize)
+            ax.set_ylabel("${\it I}$ (cps)", fontsize=fontsize)
         else:
             ax.set_ylabel("")
         ax.tick_params(axis='y', which='minor', bottom=False)
