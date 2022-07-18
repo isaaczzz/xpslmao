@@ -20,7 +20,7 @@ rc('text', usetex=False)
 # Add FWHM and area calculations to xpslmao (or add a function to do post-processing after fit results have been stored?)
 # Add option to constrain peak positions to values in fitBEGuess
 
-def xpslmao(path, xlim=False, ylim=False, xticks=False, yticks=False, c1s=False, bg=False, plot=True, plotFits=True, plotEnvelope=False, dim=(3.25,3.25), color='k', savefig=False, fit=False, fitBEGuess=False):
+def xpslmao(path, xlim=False, ylim=False, xticks=False, yticks=False, c1s=False, bg=False, plot=True, plotFits=True, plotEnvelope=False, dim=(3.25,3.25), color='k', savefig=False, fit=False, fitBEGuess=False, fontsize=12):
     xdim = dim[0]
     ydim = dim[1]
     
@@ -111,8 +111,6 @@ def xpslmao(path, xlim=False, ylim=False, xticks=False, yticks=False, c1s=False,
             params["p"+str(k)+"fraction"].vary = False
             
             if fitBEGuess:
-                print(type(fitBEGuess))
-                print(fitBEGuess[k-1])
                 # params.add(name="p"+str(k)+"center", value=fitBEGuess[k-1], min=xlim[1], max=xlim[0])
                 params.add(name="p"+str(k)+"center", value=fitBEGuess[k-1])
                 params.add(name="p"+str(k)+"amplitude", value=(max(y)-min(autoBG))*1.5, min=0)
@@ -150,8 +148,8 @@ def xpslmao(path, xlim=False, ylim=False, xticks=False, yticks=False, c1s=False,
             if plotEnvelope:
                 plt.plot(x, result.best_fit+autoBG, dashes=(3,2), color=envelopeColor, linewidth=envelopeLineWidth)
                 sns.scatterplot(data=data, x="B.E.", y="CPS", ax=ax, style=True, legend=False, color=color, alpha=0.4, size=0.25, zorder=100)
-        ax.set_xlabel("Binding Energy (eV)")
-        ax.set_ylabel("${\it I}$ (cps)")
+        ax.set_xlabel("Binding Energy (eV)", fontsize=fontsize)
+        ax.set_ylabel("${\it I}$ (cps)", fontsize=fontsize)
         ax.set_xlim(xlim)
         ax.set_ylim(ylim)
         if xlim == False and ylim == False:
