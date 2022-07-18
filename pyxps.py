@@ -18,7 +18,7 @@ rc('text', usetex=False)
 # Constrain peak spacings for fits to doublets
 # Multiple regions for Shirley background OR integrate Shirley into lmfit
 # Add FWHM and area calculations to xpslmao (or add a function to do post-processing after fit results have been stored?)
-# Fix fitBEGuess specification (throws TypeError)
+# Add option to constrain peak positions to values in fitBEGuess
 
 def xpslmao(path, xlim=False, ylim=False, xticks=False, yticks=False, c1s=False, bg=False, plot=True, plotFits=True, plotEnvelope=False, dim=(3.25,3.25), color='k', savefig=False, fit=False, fitBEGuess=False):
     xdim = dim[0]
@@ -111,8 +111,10 @@ def xpslmao(path, xlim=False, ylim=False, xticks=False, yticks=False, c1s=False,
             params["p"+str(k)+"fraction"].vary = False
             
             if fitBEGuess:
+                print(type(fitBEGuess))
                 print(fitBEGuess[k-1])
-                params.add(name="p"+str(k)+"center", value=fitBEGuess[k-1], min=xlim[1], max=xlim[0])
+                # params.add(name="p"+str(k)+"center", value=fitBEGuess[k-1], min=xlim[1], max=xlim[0])
+                params.add(name="p"+str(k)+"center", value=fitBEGuess[k-1])
                 params.add(name="p"+str(k)+"amplitude", value=(max(y)-min(autoBG))*1.5, min=0)
                 params.add(name="p"+str(k)+"sigma", value=1.5, min=0, max=5)
             
